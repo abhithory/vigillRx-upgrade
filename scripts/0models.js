@@ -162,6 +162,16 @@ class Prescriber extends Provider {
         const tx_receipt = await tx_hash.wait();
         
     }
+
+    async get_prescriptions(){
+        const patients = await this.contract.getPatientList();
+        const pres = [];
+        patients.forEach(async (patient) => {
+            let presForPatient = await this.contract.getPrescriptionList(patient);
+            pres.push(...presForPatient);
+        });
+        return pres;
+    }
 }
 
 

@@ -91,7 +91,10 @@ const simulate_patient = async function (patient) {
 }
 
 const simulate_prescriber = async function(prescriber){
-    const prescriptions = prescriber.get_prescriptions();
+    const prescriptions = await prescriber.get_prescriptions();
+    console.log("prescriptions");
+    console.log(prescriptions);
+    return
     for (let i = 0; i < prescriptions.length; i++) {
         let prescription = new Prescription(prescriptions[i]);
         const refillSigRequired = await prescription.refillSigRequired();
