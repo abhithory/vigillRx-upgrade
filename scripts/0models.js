@@ -14,7 +14,6 @@ class ConnectionData {
         this.provider = new ethers.providers.JsonRpcProvider("HTTP://127.0.0.1:7545");
         this.defaultSigner = this.provider.getSigner();
         this.defaultAddress = this.provider.address;
-
     }
     getCustomSigner(privateKey) {
         const signer = new ethers.Wallet(privateKey, this.provider);
@@ -166,10 +165,10 @@ class Prescriber extends Provider {
     async get_prescriptions(){
         const patients = await this.contract.getPatientList();
         const pres = [];
-        patients.forEach(async (patient) => {
-            let presForPatient = await this.contract.getPrescriptionList(patient);
+        for (let i = 0; i < patients.length; i++) {
+            let presForPatient = await this.contract.getPrescriptionList(patients[i]);
             pres.push(...presForPatient);
-        });
+        }
         return pres;
     }
 }
@@ -205,6 +204,16 @@ class Pharmacy extends Provider {
         const tx_hash = await this.contract.requestRefill(prescription_address);
         const tx_receipt = await tx_hash.wait();
         
+    }
+
+    async get_prescriptions(){
+        const patients = await this.contract.getPatientList();
+        const pres = [];
+        for (let i = 0; i < patients.length; i++) {
+            let presForPatient = await this.contract.getPrescriptionList(patients[i]);
+            pres.push(...presForPatient);
+        }
+        return pres;
     }
 }
 
@@ -264,6 +273,9 @@ class Prescription {
     }
     async refillSigRequired(){
         return await this.contract.refillSigRequired();
+    }
+    async p(){
+        return await this.contract.p();
     }
 }
 
