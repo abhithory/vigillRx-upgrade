@@ -1,9 +1,9 @@
-const { Patient, Prescriber, Pharmacy, DemoAccounts, Prescription } = require('./0models.js');
+const { Patient, Prescriber, Pharmacy, DemoAccounts, Prescription, GenerateReports } = require('./0models.js');
 
 // Data
 
-const pool_size = 10;
-const num_cycles = 1;
+const pool_size = 100;
+const num_cycles = 2;
 const patient_ratio = 60 / 100;
 const prescriber_ratio = 30 / 100;
 const pharmacy_ratio = 10 / 100;
@@ -96,20 +96,20 @@ const simulate_prescriber = async function (prescriber) {
             await prescriber.refill_prescription(
                 prescriptions[i],
                 5
-                );
+            );
         }
     }
     console.log("Prescriber simulation Completed");
 }
 
-const simulate_pharmacy = async function(pharmacy){
+const simulate_pharmacy = async function (pharmacy) {
     const prescriptions = await pharmacy.get_prescriptions();
     for (let i = 0; i < prescriptions.length; i++) {
         let prescription = new Prescription(prescriptions[i]);
         const fillSigRequired = await prescription.fillSigRequired();
         const fill_count = await prescription.p();
         if (fillSigRequired && fill_count[3]) {
-            await pharmacy.fill_prescription(prescriptions[i],1);
+            await pharmacy.fill_prescription(prescriptions[i], 1);
         } else {
             await pharmacy.request_refill(prescriptions[i]);
 
@@ -119,6 +119,7 @@ const simulate_pharmacy = async function(pharmacy){
 }
 
 const main = async function () {
+
     await deploy_role_pool();
     for (let i = 0; i < num_cycles; i++) {
         for (let i = 0; i < role_pool['patients'].length; i++) {
@@ -134,10 +135,23 @@ const main = async function () {
 
         console.log("Cycle ", i + 1, "/", num_cycles, " Complete =====")
     }
-    console.log("✧･ﾟ: *✧･ﾟ:* Simulation Complete *:･ﾟ✧*:･ﾟ✧")
+    console.log("✧･ﾟ: *✧･ﾟ:* Simulation Complete *:･ﾟ✧*:･ﾟ✧");
 
-
+    generateAndSaveReport();
 }
 
-// createAccounts(10);
+
+const generateAndSaveReport = async function () {
+    const generateReport = new GenerateReports();
+    const allDataInOneArr = [...role_pool["patients"], ...role_pool["prescribes"], ...role_pool["pharmacies"]];
+    const parshedDataArray = [];
+    for (const onPool of allDataInOneArr) {
+        let tx_report_parshed = generateReport.parshTxReport(onPool.to_dict());
+        parshedDataArray.push(tx_report_parshed)
+    }
+    generateReport.saveOjectArrayToFile(parshedDataArray);
+}
+
+// createAccounts(100);
 main();
+
