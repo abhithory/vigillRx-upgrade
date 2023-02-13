@@ -46,21 +46,21 @@ class Registrar {
     async new_patient(personal_address) {
         const _newPatient = await this.contract.createPatient(personal_address);
         const newPatient = await _newPatient.wait();
-        console.log(`New Patient Address: ${newPatient.events[0].args[0]}`);
+        console.log(`New Patient Address created: ${newPatient.events[0].args[0]}`);
         return newPatient.events[0].args[0];
     }
 
     async new_prescriber(personal_address, npi) {
         const _newPrescriber = await this.contract.createPrescriber(personal_address, npi);
         const newPrescriber = await _newPrescriber.wait();
-        console.log(`New Prescriber Address: ${newPrescriber.events[0].args[0]}`);
+        console.log(`New Prescriber Address created: ${newPrescriber.events[0].args[0]}`);
         return newPrescriber.events[0].args[0];
     }
 
     async new_pharmacy(personal_address, npi) {
         const _newPharmacy = await this.contract.createPharmacy(personal_address, npi);
         const newPharmacy = await _newPharmacy.wait();
-        console.log(`New Pharmacy Address: ${newPharmacy.events[0].args[0]}`);
+        console.log(`New Pharmacy Address created: ${newPharmacy.events[0].args[0]}`);
         return newPharmacy.events[0].args[0];
     }
 }
@@ -149,9 +149,6 @@ class Prescriber extends Provider {
     async new_prescription(patient_address, ndc, quantity, refills) {
         const tx_hash = await this.contract.createPrescription(patient_address, ndc, quantity, refills);
         const tx_receipt = await tx_hash.wait();
-        console.log("new prescription contract:");
-        console.log(tx_receipt.events[0]['args']['contractAddress']);
-
         return tx_receipt.events[0]['args']['contractAddress'];
     }
 
@@ -222,6 +219,7 @@ class Pharmacy extends Provider {
 class DemoAccounts {
     constructor() {
         this.accounts = [];
+        this.isAccountsFunded = false;
     }
 
     async AddNewAccountsInExel(total) {
@@ -231,7 +229,7 @@ class DemoAccounts {
             allAccounts.push({ publicKey: wallet.address, privateKey: wallet.privateKey })
         }
 
-        const ws = XLSX.utils.json_to_sheet(data)
+        const ws = XLSX.utils.json_to_sheet(allAccounts)
         const wb = XLSX.utils.book_new()
         XLSX.utils.book_append_sheet(wb, ws, 'Accounts')
         XLSX.writeFile(wb, './usedData/accounts.xlsx')
@@ -244,19 +242,15 @@ class DemoAccounts {
         const dataJson = XLSX.utils.sheet_to_json(file.Sheets[file.SheetNames[0]]);
 
         for (let i = 0; i < dataJson.length; i++) {
-            // console.log(dataJson[i].publicKey);
-            // let balance = await provider.getBalance(dataJson[i].publicKey);
-            // console.log(balance);
             let tx = {
                 to: dataJson[i].publicKey,
                 value: ethers.utils.parseEther(String(InEachAccount), 'ether')
             };
             await _registrar.connectionData.defaultSigner.sendTransaction(tx);
-            // balance = await provider.getBalance(dataJson[i].publicKey);
-            // console.log(balance);
         }
         this.accounts = dataJson;
-        console.log(`${InEachAccount} Ethers Transferred Succefully!`);
+        this.isAccountsFunded = true;
+        console.log(`${InEachAccount} Ethers Transferred Succefully to All accounts.`);
     }
 
 }

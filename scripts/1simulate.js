@@ -3,7 +3,7 @@ const { Patient, Prescriber, Pharmacy, DemoAccounts, Prescription } = require('.
 // Data
 
 const pool_size = 10;
-const num_cycles = 10;
+const num_cycles = 1;
 const patient_ratio = 60 / 100;
 const prescriber_ratio = 30 / 100;
 const pharmacy_ratio = 10 / 100;
@@ -11,12 +11,15 @@ const role_pool = { "patients": [], "prescribes": [], "pharmacies": [] };
 const npi = 55555555;
 
 
-
+const createAccounts = async function (amount) {
+    const demoAccounts = new DemoAccounts();
+    await demoAccounts.AddNewAccountsInExel(amount);
+}
 
 const deploy_role_pool = async function () {
 
     const demoAccounts = new DemoAccounts();
-    if (demoAccounts.accounts.length < pool_size) {
+    if (!demoAccounts.isAccountsFunded) {
         await demoAccounts.FundAccountsAndLoad(1);
     }
 
@@ -25,6 +28,7 @@ const deploy_role_pool = async function () {
         let patient = new Patient(demoAccounts.accounts[currentAccount].publicKey, demoAccounts.accounts[currentAccount].privateKey);
         await patient.deployPatient();
         role_pool['patients'].push(patient);
+
         currentAccount++;
     }
 
@@ -41,22 +45,15 @@ const deploy_role_pool = async function () {
         role_pool['pharmacies'].push(pharmacy);
         currentAccount++;
     }
-
-    // console.log(role_pool);
     console.log("===== Role pool deployment complete =====");
 };
 
 const simulate_patient = async function (patient) {
-    if (!patient) return;
     let prescriptions = await patient.get_prescriptions();
     if (prescriptions.length < 1) {
-        // const randomValue = Math.floor(Math.random() * role_pool['prescribes'].length);
-        const randomValue = 0;
-        console.log(randomValue);
+        const randomValue = Math.floor(Math.random() * role_pool['prescribes'].length);
         const prescriber = role_pool['prescribes'][randomValue];
-
         await patient.add_permissioned(prescriber.contract_address);
-
         const ndc = 5555555555;
         const quantity = 5;
         const refills = 5;
@@ -67,13 +64,9 @@ const simulate_patient = async function (patient) {
             quantity,
             refills
         )
-
         const pharmacy = role_pool['pharmacies'][Math.floor(Math.random() * role_pool['pharmacies'].length)];
-
         await patient.add_prescription_permissions(prescription_address, pharmacy.contract_address);
-
         await pharmacy.add_prescription(prescription_address);
-
         console.log("Demo prescription added for patient.");
     }
 
@@ -127,22 +120,24 @@ const simulate_pharmacy = async function(pharmacy){
 
 const main = async function () {
     await deploy_role_pool();
-
-
     for (let i = 0; i < num_cycles; i++) {
-
         for (let i = 0; i < role_pool['patients'].length; i++) {
-            await simulate_patient(role_pool['patients'][role_pool['patients'][i]]);
+            await simulate_patient(role_pool['patients'][i]);
         }
 
         for (let i = 0; i < role_pool['prescribes'].length; i++) {
-            await simulate_patient(role_pool['prescribes'][role_pool['prescribes'][i]]);
+            await simulate_prescriber(role_pool['prescribes'][i]);
         }
         for (let i = 0; i < role_pool['pharmacies'].length; i++) {
-            await simulate_patient(role_pool['pharmacies'][role_pool['pharmacies'][i]]);
+            await simulate_pharmacy(role_pool['pharmacies'][i]);
         }
+
+        console.log("Cycle ", i + 1, "/", num_cycles, " Complete =====")
     }
+    console.log("✧･ﾟ: *✧･ﾟ:* Simulation Complete *:･ﾟ✧*:･ﾟ✧")
+
 
 }
 
+// createAccounts(10);
 main();
