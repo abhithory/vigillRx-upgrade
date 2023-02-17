@@ -128,7 +128,7 @@ class Patient extends Roles {
 
         this.runtime['add_permissioned'] += Date.now() - start;
         this.gas_used['add_permissioned'] += tx_receipt.gasUsed
-        this.transactions['add_permissioned'] += 1
+        this.transactions['add_permissioned'] += 1;
     }
 
     async remove_permissioned(presciber_address) {

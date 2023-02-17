@@ -6,7 +6,7 @@ module.exports = {
     ganache: {
       url: "HTTP://127.0.0.1:7545",
       // change private key
-      accounts:['965b09406f43bd7fa5eb07e923cad4ffc2f26b98ee1f9d7b52c003e206fffc6f']
+      accounts:['45ab33005aa88c036a9032b9d3b65cf2b38940ed14a5f6af815c10bc7dd26e92']
     }
   },
   solidity: "0.8.17",

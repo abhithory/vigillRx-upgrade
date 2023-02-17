@@ -8,7 +8,7 @@ const patient_ratio = 60 / 100;
 const prescriber_ratio = 30 / 100;
 const pharmacy_ratio = 10 / 100;
 const role_pool = { "patients": [], "prescribes": [], "pharmacies": [] };
-const npi = 55555555;
+const npi = 1111111111;
 
 
 const createAccounts = async function (amount) {
@@ -109,7 +109,7 @@ const simulate_pharmacy = async function (pharmacy) {
         const fillSigRequired = await prescription.fillSigRequired();
         const fill_count = await prescription.p();
         if (fillSigRequired && fill_count[3]) {
-            await pharmacy.fill_prescription(prescriptions[i], 1);
+            await pharmacy.fill_prescription(prescriptions[i], 5);
         } else {
             await pharmacy.request_refill(prescriptions[i]);
 
