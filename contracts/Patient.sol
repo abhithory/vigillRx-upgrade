@@ -8,7 +8,7 @@ import "./Prescription.sol";
 ///         checks and tracking assigned prescription contracts
 contract Patient {
     /// @notice Contract owner and registrar contract addresses
-    address owner;
+    address public owner;
     Registrar public registrar;
     mapping(address => bool) public permissioned; /// @notice Permissioned parties mapping, determines who is allowed certain actions
     address[] public prescriptions; /// @notice List of current prescription contracts

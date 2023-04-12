@@ -6,18 +6,31 @@ const PharmacyJson = require("../artifacts/contracts/Pharmacy.sol/Pharmacy.json"
 const XLSX = require('xlsx');
 
 const hre = require("hardhat");
+const Web3 = require('web3')
+const HDWalletProvider = require('@truffle/hdwallet-provider')
 
+
+
+
+let _registrar;
 
 
 class ConnectionData {
     constructor() {
+        this.rpcUrl = "HTTP://127.0.0.1:7545";
         this.provider = new ethers.providers.JsonRpcProvider("HTTP://127.0.0.1:7545");
         this.defaultSigner = this.provider.getSigner();
         this.defaultAddress = this.provider.address;
+        this.web3 = new Web3(new Web3.providers.HttpProvider(this.rpcUrl));
     }
     getCustomSigner(privateKey) {
         const signer = new ethers.Wallet(privateKey, this.provider);
         return signer;
+    }
+
+    getCustomWeb3(PRIVATE_KEY) {
+        console.log("private keyy", PRIVATE_KEY);
+        return new Web3(new HDWalletProvider(PRIVATE_KEY, this.rpcUrl));
     }
 }
 
@@ -29,46 +42,51 @@ class Registrar {
         this.contract_address = null;
         this.connectionData = new ConnectionData();
 
-        this.deployRegistrar();
+        // this.deployRegistrar();
     }
 
     async deployRegistrar() {
         const Registrar = await hre.ethers.getContractFactory("Registrar");
         const registrar = await Registrar.deploy();
-
         await registrar.deployed();
 
-        console.log(`Resigstrar contract Deployed ${registrar.address}`);
         this.contract_address = registrar.address;
+        // this.contract = registrar;
         this.contract = new ethers.Contract(registrar.address, RegistrarJson.abi, this.connectionData.defaultSigner);
+        console.log(`Resigstrar contract Deployed ${registrar.address}`);
     }
 
     async new_patient(personal_address) {
         const _newPatient = await this.contract.createPatient(personal_address);
         const newPatient = await _newPatient.wait();
-        console.log(`New Patient Address created: ${newPatient.events[0].args[0]}`);
+        console.log(`New Patient created: ${newPatient.events[0].args[0]}`);
         return newPatient.events[0].args[0];
     }
 
     async new_prescriber(personal_address, npi) {
         const _newPrescriber = await this.contract.createPrescriber(personal_address, npi);
         const newPrescriber = await _newPrescriber.wait();
-        console.log(`New Prescriber Address created: ${newPrescriber.events[0].args[0]}`);
+        console.log(`New Prescriber created: ${newPrescriber.events[0].args[0]}`);
+
         return newPrescriber.events[0].args[0];
     }
 
     async new_pharmacy(personal_address, npi) {
         const _newPharmacy = await this.contract.createPharmacy(personal_address, npi);
         const newPharmacy = await _newPharmacy.wait();
-        console.log(`New Pharmacy Address created: ${newPharmacy.events[0].args[0]}`);
+        console.log(`New Pharmacy created: ${newPharmacy.events[0].args[0]}`);
         return newPharmacy.events[0].args[0];
     }
 }
 
-const _registrar = new Registrar();
+async function deployRegistrar() {
+    _registrar = new Registrar();
+    await _registrar.deployRegistrar()
+}
+
 
 class Roles {
-    constructor(personal_address, privateKey) {
+    constructor(personal_address, privateKey,) {
         this.personal_address = personal_address;
         this.privateKey = privateKey;
     }
@@ -120,11 +138,11 @@ class Patient extends Roles {
     }
 
     async add_permissioned(presciber_address) {
-        // Adds a prescriber as permissioned to prescribe to the
-
         let start = Date.now();
         const tx_hash = await this.contract.addPermissionedPrescriber(presciber_address);
         const tx_receipt = await tx_hash.wait();
+
+        console.log(`Patient add_permissioned called`);
 
         this.runtime['add_permissioned'] += Date.now() - start;
         this.gas_used['add_permissioned'] += tx_receipt.gasUsed
@@ -136,6 +154,8 @@ class Patient extends Roles {
 
         const tx_hash = await this.contract.removePermissionedPrescriber(presciber_address);
         const tx_receipt = await tx_hash.wait();
+        console.log(`Patient remove_permissioned called`);
+
 
         this.runtime['remove_permissioned'] += Date.now() - start;
         this.gas_used['remove_permissioned'] += tx_receipt.gasUsed;
@@ -144,9 +164,10 @@ class Patient extends Roles {
 
     async add_prescription_permissions(prescription_address, pharmacy_address) {
         let start = Date.now();
-
         const tx_hash = await this.contract.addPrescriptionPermissions(prescription_address, pharmacy_address);
         const tx_receipt = await tx_hash.wait();
+        console.log(`Patient add_prescription_permissions called`);
+
 
         this.runtime['add_prescription_permissions'] += Date.now() - start;
         this.gas_used['add_prescription_permissions'] += tx_receipt.gasUsed;
@@ -155,9 +176,10 @@ class Patient extends Roles {
 
     async remove_prescription_permissions(presciber_address) {
         let start = Date.now();
-
         const tx_hash = await this.contract.removePrescriptionPermissions(presciber_address);
         const tx_receipt = await tx_hash.wait();
+        console.log(`Patient remove_prescription_permissions called`);
+
 
         this.runtime['remove_prescription_permissions'] += Date.now() - start;
         this.gas_used['remove_prescription_permissions'] += tx_receipt.gasUsed;
@@ -166,9 +188,10 @@ class Patient extends Roles {
 
     async request_fill(prescription_address) {
         let start = Date.now();
-
         const tx_hash = await this.contract.requestFill(prescription_address);
         const tx_receipt = await tx_hash.wait();
+        console.log(`Patient request_fill called`);
+
 
         this.runtime['request_fill'] += Date.now() - start;
         this.gas_used['request_fill'] += tx_receipt.gasUsed;
@@ -176,6 +199,8 @@ class Patient extends Roles {
     }
 
     async get_prescriptions() {
+        console.log(`Patient get_prescriptions called`);
+
         return await this.contract.getPrescriptionList();
     }
 }
@@ -223,9 +248,11 @@ class Prescriber extends Provider {
 
     async new_prescription(patient_address, ndc, quantity, refills) {
         let start = Date.now();
-
         const tx_hash = await this.contract.createPrescription(patient_address, ndc, quantity, refills);
         const tx_receipt = await tx_hash.wait();
+
+        console.log(`Prescriber new_prescription called`);
+
 
         this.runtime['new_prescription'] += Date.now() - start;
         this.gas_used['new_prescription'] += tx_receipt.gasUsed;
@@ -236,10 +263,11 @@ class Prescriber extends Provider {
 
     async refill_prescription(prescription_address, refill_count) {
         let start = Date.now();
-
         const tx_hash = await this.contract.refillPrescription(prescription_address,
             refill_count);
         const tx_receipt = await tx_hash.wait();
+        console.log(`Prescriber refill_prescription called`);
+
 
         this.runtime['refill_prescription'] += Date.now() - start;
         this.gas_used['refill_prescription'] += tx_receipt.gasUsed;
@@ -249,6 +277,8 @@ class Prescriber extends Provider {
     }
 
     async get_prescriptions() {
+        console.log(`Prescriber get_prescriptions called`);
+
         const patients = await this.contract.getPatientList();
         const pres = [];
         for (let i = 0; i < patients.length; i++) {
@@ -262,6 +292,7 @@ class Prescriber extends Provider {
 
 
 class Pharmacy extends Provider {
+
     constructor(personal_address, privateKey, npi) {
         super(personal_address, privateKey, npi);
         this.contract = null;
@@ -288,9 +319,11 @@ class Pharmacy extends Provider {
 
     async add_prescription(prescription_address) {
         let start = Date.now()
-
         const tx_hash = await this.contract.addPrescription(prescription_address);
         const tx_receipt = await tx_hash.wait();
+
+        console.log(`Pharmacy add_prescription called`);
+
 
         this.runtime['add_prescription'] += Date.now() - start
         this.gas_used['add_prescription'] += tx_receipt.gasUsed
@@ -300,10 +333,11 @@ class Pharmacy extends Provider {
 
     async fill_prescription(prescription_address, fill_count) {
         let start = Date.now()
-
         const tx_hash = await this.contract.fillPrescription(prescription_address,
             fill_count);
         const tx_receipt = await tx_hash.wait();
+        console.log(`Pharmacy fill_prescription called`);
+
         this.runtime['fill_prescription'] += Date.now() - start
         this.gas_used['fill_prescription'] += tx_receipt.gasUsed
         this.transactions['fill_prescription'] += 1
@@ -311,9 +345,10 @@ class Pharmacy extends Provider {
 
     async request_refill(prescription_address) {
         let start = Date.now()
-
         const tx_hash = await this.contract.requestRefill(prescription_address);
         const tx_receipt = await tx_hash.wait();
+        console.log(`Pharmacy request_refill called`);
+
 
         this.runtime['request_refill'] += Date.now() - start
         this.gas_used['request_refill'] += tx_receipt.gasUsed
@@ -322,11 +357,13 @@ class Pharmacy extends Provider {
 
     async get_prescriptions() {
         const patients = await this.contract.getPatientList();
+        
         const pres = [];
         for (let i = 0; i < patients.length; i++) {
             let presForPatient = await this.contract.getPrescriptionList(patients[i]);
             pres.push(...presForPatient);
         }
+        console.log(`Pharmacy get_prescriptions called`);
         return pres;
     }
 }
@@ -341,7 +378,7 @@ class DemoAccounts {
         const allAccounts = [];
         for (let i = 0; i < total; i++) {
             let wallet = await ethers.Wallet.createRandom();
-            allAccounts.push({ publicKey: wallet.address, privateKey: wallet.privateKey })
+            allAccounts.push({ publicKey: wallet.address, privateKey: wallet.privateKey, mnemonic: wallet.mnemonic.phrase })
         }
 
         const ws = XLSX.utils.json_to_sheet(allAccounts)
@@ -385,22 +422,22 @@ class GenerateReports {
     }
 
     parshTxReport(data) {
-            for (const [_fun, value] of Object.entries(data['runtime'])) {
-                data[_fun + "_runtime"] = value;
-            }
+        for (const [_fun, value] of Object.entries(data['runtime'])) {
+            data[_fun + "_runtime"] = value;
+        }
 
-            for (const [_fun, value] of Object.entries(data['gas_used'])) {
-                data[_fun + "_gas_used"] = value;
-            }
+        for (const [_fun, value] of Object.entries(data['gas_used'])) {
+            data[_fun + "_gas_used"] = value;
+        }
 
-            for (const [_fun, value] of Object.entries(data['transactions'])) {
-                data[_fun + "_transactions"] = value;
-            }
-            delete data["runtime"];
-            delete data["gas_used"];
-            delete data["transactions"];
+        for (const [_fun, value] of Object.entries(data['transactions'])) {
+            data[_fun + "_transactions"] = value;
+        }
+        delete data["runtime"];
+        delete data["gas_used"];
+        delete data["transactions"];
 
-            return data;
+        return data;
     }
 }
 
@@ -422,4 +459,4 @@ class Prescription {
     }
 }
 
-module.exports = { DemoAccounts, Pharmacy, Prescriber, Patient, Registrar, ConnectionData, Prescription, GenerateReports };
+module.exports = { DemoAccounts, Pharmacy, Prescriber, Patient, Registrar, ConnectionData, Prescription, GenerateReports, deployRegistrar };

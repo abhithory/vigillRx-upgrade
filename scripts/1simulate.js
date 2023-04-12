@@ -1,8 +1,8 @@
-const { Patient, Prescriber, Pharmacy, DemoAccounts, Prescription, GenerateReports } = require('./0models.js');
+const { Patient, Prescriber, Pharmacy, DemoAccounts, Prescription, GenerateReports, deployRegistrar } = require('./0models.js');
 
 // Data
 
-const pool_size = 100;
+const pool_size = 10;
 const num_cycles = 2;
 const patient_ratio = 60 / 100;
 const prescriber_ratio = 30 / 100;
@@ -18,6 +18,7 @@ const createAccounts = async function (amount) {
 
 const deploy_role_pool = async function () {
 
+    await deployRegistrar();
     const demoAccounts = new DemoAccounts();
     if (!demoAccounts.isAccountsFunded) {
         await demoAccounts.FundAccountsAndLoad(1);
@@ -152,6 +153,6 @@ const generateAndSaveReport = async function () {
     generateReport.saveOjectArrayToFile(parshedDataArray);
 }
 
-// createAccounts(100);
+// createAccounts(10);
 main();
 

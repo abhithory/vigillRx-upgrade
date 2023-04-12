@@ -1,10 +1,9 @@
 {
   "name": "hardhat-project",
-  "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^2.0.1",
-    "hardhat": "^2.12.6"
-  },
   "dependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^2.0.2",
+    "@truffle/hdwallet-provider": "^2.1.9",
+    "hardhat": "^2.13.1",
     "web3": "^1.8.2",
     "xlsx": "^0.18.5"
   }

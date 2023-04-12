@@ -9,7 +9,7 @@ import "./Pharmacy.sol";
 /// @notice The contract handles the creation of role contracts and validation of
 ///         contract address to specific roles
 contract Registrar {
-    address owner;
+    address public owner;
 
     // 1 == Patient, 2 == Prescriber, 3 == Pharmacy
     mapping(address => uint8) contractStatus;
