@@ -142,7 +142,7 @@ class Patient extends Roles {
         const tx_hash = await this.contract.addPermissionedPrescriber(presciber_address);
         const tx_receipt = await tx_hash.wait();
 
-        console.log(`Patient add_permissioned called`);
+        console.log(`Patient:${this.contract_address} -> add_permissioned called to prescriber:${presciber_address}`);
 
         this.runtime['add_permissioned'] += Date.now() - start;
         this.gas_used['add_permissioned'] += tx_receipt.gasUsed
@@ -154,7 +154,7 @@ class Patient extends Roles {
 
         const tx_hash = await this.contract.removePermissionedPrescriber(presciber_address);
         const tx_receipt = await tx_hash.wait();
-        console.log(`Patient remove_permissioned called`);
+        console.log(`Patient:${this.contract_address} remove_permissioned called for prescriber:${presciber_address}`);
 
 
         this.runtime['remove_permissioned'] += Date.now() - start;
@@ -166,7 +166,7 @@ class Patient extends Roles {
         let start = Date.now();
         const tx_hash = await this.contract.addPrescriptionPermissions(prescription_address, pharmacy_address);
         const tx_receipt = await tx_hash.wait();
-        console.log(`Patient add_prescription_permissions called`);
+        console.log(`Patient:${this.contract_address} add_prescription_permissions called for Pharmacy:${pharmacy_address} and Prescription:${prescription_address}`);
 
 
         this.runtime['add_prescription_permissions'] += Date.now() - start;
@@ -178,7 +178,7 @@ class Patient extends Roles {
         let start = Date.now();
         const tx_hash = await this.contract.removePrescriptionPermissions(presciber_address);
         const tx_receipt = await tx_hash.wait();
-        console.log(`Patient remove_prescription_permissions called`);
+        console.log(`Patient:${this.contract_address} remove_prescription_permissions called for Presciber:${presciber_address}`);
 
 
         this.runtime['remove_prescription_permissions'] += Date.now() - start;
@@ -190,7 +190,7 @@ class Patient extends Roles {
         let start = Date.now();
         const tx_hash = await this.contract.requestFill(prescription_address);
         const tx_receipt = await tx_hash.wait();
-        console.log(`Patient request_fill called`);
+        console.log(`Patient:${this.contract_address} request_fill called for Prescription:${prescription_address}`);
 
 
         this.runtime['request_fill'] += Date.now() - start;
@@ -199,7 +199,7 @@ class Patient extends Roles {
     }
 
     async get_prescriptions() {
-        console.log(`Patient get_prescriptions called`);
+        console.log(`Patient:${this.contract_address} get_prescriptions called`);
 
         return await this.contract.getPrescriptionList();
     }
@@ -237,13 +237,8 @@ class Prescriber extends Provider {
 
     async deployPrescriber() {
         // """Deploys new prescription contract to Ganache.
-
-
         this.contract_address = await _registrar.new_prescriber(this.personal_address, this.npi);
         this.contract = new ethers.Contract(this.contract_address, PrescriberJson.abi, _registrar.connectionData.getCustomSigner(this.privateKey));
-
-
-
     }
 
     async new_prescription(patient_address, ndc, quantity, refills) {
@@ -251,7 +246,7 @@ class Prescriber extends Provider {
         const tx_hash = await this.contract.createPrescription(patient_address, ndc, quantity, refills);
         const tx_receipt = await tx_hash.wait();
 
-        console.log(`Prescriber new_prescription called`);
+        console.log(`Prescriber:${this.contract_address} new_prescription called for patient:${patient_address},quantity:${quantity}, refills:${refills}, ndc${ndc}`);
 
 
         this.runtime['new_prescription'] += Date.now() - start;
@@ -266,7 +261,7 @@ class Prescriber extends Provider {
         const tx_hash = await this.contract.refillPrescription(prescription_address,
             refill_count);
         const tx_receipt = await tx_hash.wait();
-        console.log(`Prescriber refill_prescription called`);
+        console.log(`Prescriber:${this.contract_address} refill_prescription called for Prescription:${prescription_address} and refillcount:${refill_count}`);
 
 
         this.runtime['refill_prescription'] += Date.now() - start;
@@ -277,7 +272,7 @@ class Prescriber extends Provider {
     }
 
     async get_prescriptions() {
-        console.log(`Prescriber get_prescriptions called`);
+        console.log(`Prescriber:${this.contract_address} get_prescriptions called`);
 
         const patients = await this.contract.getPatientList();
         const pres = [];
@@ -322,7 +317,7 @@ class Pharmacy extends Provider {
         const tx_hash = await this.contract.addPrescription(prescription_address);
         const tx_receipt = await tx_hash.wait();
 
-        console.log(`Pharmacy add_prescription called`);
+        console.log(`Pharmacy:${this.contract_address} add_prescription called for prescription:${prescription_address}`);
 
 
         this.runtime['add_prescription'] += Date.now() - start
@@ -336,7 +331,7 @@ class Pharmacy extends Provider {
         const tx_hash = await this.contract.fillPrescription(prescription_address,
             fill_count);
         const tx_receipt = await tx_hash.wait();
-        console.log(`Pharmacy fill_prescription called`);
+        console.log(`Pharmacy:${this.contract_address} fill_prescription called for prescription:${prescription_address}, fillcount:${fill_count}`);
 
         this.runtime['fill_prescription'] += Date.now() - start
         this.gas_used['fill_prescription'] += tx_receipt.gasUsed
@@ -347,7 +342,7 @@ class Pharmacy extends Provider {
         let start = Date.now()
         const tx_hash = await this.contract.requestRefill(prescription_address);
         const tx_receipt = await tx_hash.wait();
-        console.log(`Pharmacy request_refill called`);
+        console.log(`Pharmacy:${this.contract_address} request_refill called prescription:${prescription_address}`);
 
 
         this.runtime['request_refill'] += Date.now() - start
@@ -363,7 +358,7 @@ class Pharmacy extends Provider {
             let presForPatient = await this.contract.getPrescriptionList(patients[i]);
             pres.push(...presForPatient);
         }
-        console.log(`Pharmacy get_prescriptions called`);
+        console.log(`Pharmacy:${this.contract_address} get_prescriptions called`);
         return pres;
     }
 }
