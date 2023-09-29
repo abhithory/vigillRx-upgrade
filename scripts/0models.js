@@ -352,7 +352,7 @@ class Pharmacy extends Provider {
 
     async get_prescriptions() {
         const patients = await this.contract.getPatientList();
-        
+
         const pres = [];
         for (let i = 0; i < patients.length; i++) {
             let presForPatient = await this.contract.getPrescriptionList(patients[i]);
@@ -398,7 +398,7 @@ class DemoAccounts {
         }
         this.accounts = dataJson;
         this.isAccountsFunded = true;
-        console.log(`${InEachAccount} Ethers Transferred Succefully to All accounts.`);
+        console.log(`${InEachAccount} Ethers Transferred Succefully to All ${dataJson.length} accounts.`);
     }
 
 }

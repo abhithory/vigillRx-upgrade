@@ -2,7 +2,7 @@ const { Patient, Prescriber, Pharmacy, DemoAccounts, Prescription, GenerateRepor
 
 // Data
 
-const pool_size = 10;
+const pool_size = 250;
 const num_cycles = 2;
 const patient_ratio = 60 / 100;
 const prescriber_ratio = 30 / 100;
@@ -21,6 +21,7 @@ const deploy_role_pool = async function () {
     await deployRegistrar();
     const demoAccounts = new DemoAccounts();
     if (!demoAccounts.isAccountsFunded) {
+        await createAccounts(pool_size);
         await demoAccounts.FundAccountsAndLoad(1);
     }
 
