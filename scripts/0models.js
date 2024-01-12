@@ -390,6 +390,7 @@ class DemoAccounts {
         const dataJson = XLSX.utils.sheet_to_json(file.Sheets[file.SheetNames[0]]);
 
         for (let i = 0; i < dataJson.length; i++) {
+            console.log(i);
             let tx = {
                 to: dataJson[i].publicKey,
                 value: ethers.utils.parseEther(String(InEachAccount), 'ether')
